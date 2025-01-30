@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { Row } from './model'
 
-export const getRows = (size = 10): Row[] =>
+export const getRows = (size = 50): Row[] =>
   new Array(size).fill(null).map((_, index) => ({
     id: index,
     name: faker.name.fullName(),

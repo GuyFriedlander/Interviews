@@ -10,6 +10,7 @@ import Checkbox from '@mui/material/Checkbox'
 import TableHead from './TableHead'
 import TableToolbar from './TableToolbar'
 import { Row } from '../../db/model'
+import { TablePagination } from '@mui/material'
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T): number {
   const valueA = a[orderBy]
@@ -39,6 +40,19 @@ function getComparator<Key extends keyof any>(
 const Table = ({ rows }: { rows: Row[] }) => {
   const [orderBy, setOrderBy] = useState<keyof Row>('name')
   const [order, setOrder] = useState<Order>('asc')
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
 
   const handleRequestSort = (event: React.MouseEvent, property: string) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -56,8 +70,10 @@ const Table = ({ rows }: { rows: Row[] }) => {
   const isSelected = (name: string) => false
 
   const currentRows = useMemo(() => {
-    return [...rows].sort(getComparator(order, orderBy))
-  }, [order, orderBy, rows])
+    return [...rows]
+      .sort(getComparator(order, orderBy))
+      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  }, [order, orderBy, rows, page, rowsPerPage])
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -103,6 +119,15 @@ const Table = ({ rows }: { rows: Row[] }) => {
             </TableBody>
           </MuiTable>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={rows.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
       </Paper>
     </Box>
   )
