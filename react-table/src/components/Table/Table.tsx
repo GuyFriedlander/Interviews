@@ -41,6 +41,7 @@ const Table = ({ rows }: { rows: Row[] }) => {
   const [orderBy, setOrderBy] = useState<keyof Row>('name')
   const [order, setOrder] = useState<Order>('asc')
   const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState<readonly number[]>([])
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -60,20 +61,42 @@ const Table = ({ rows }: { rows: Row[] }) => {
     setOrderBy(property as keyof Row)
   }
 
-  const handleSelectAllClick = () => {}
+  const handleClick = (event: MouseEvent, id: number) => {
+    const selectedIndex = selected.indexOf(id)
+    let newSelected: readonly number[] = []
 
-  const handleClick = (event: MouseEvent, name: string) => {
-    console.log('event', event, 'name', name)
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id)
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1))
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1))
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1)
+      )
+    }
+    setSelected(newSelected)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isSelected = (name: string) => false
+  const isSelected = (id: number) => selected.includes(id)
 
   const currentRows = useMemo(() => {
     return [...rows]
       .sort(getComparator(order, orderBy))
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
   }, [order, orderBy, rows, page, rowsPerPage])
+
+  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const newSelected = rows.map((n) => n.id)
+      setSelected(newSelected)
+      return
+    }
+    setSelected([])
+  }
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -83,7 +106,7 @@ const Table = ({ rows }: { rows: Row[] }) => {
         <TableContainer>
           <MuiTable>
             <TableHead
-              numSelected={0}
+              numSelected={selected.length}
               order={order}
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
@@ -92,21 +115,19 @@ const Table = ({ rows }: { rows: Row[] }) => {
             />
             <TableBody>
               {currentRows.map((row) => {
-                const isItemSelected = isSelected(row.name)
+                const isItemSelected = isSelected(row.id)
 
                 return (
                   <TableRow
                     hover
-                    onClick={(event: MouseEvent) =>
-                      handleClick(event, row.name)
-                    }
+                    onClick={(event: MouseEvent) => handleClick(event, row.id)}
                     role="checkbox"
                     tabIndex={-1}
                     key={row.name}
                     selected={isItemSelected}
                   >
                     <TableCell padding="checkbox">
-                      <Checkbox color="primary" />
+                      <Checkbox color="primary" checked={isItemSelected} />
                     </TableCell>
                     <TableCell component="th" scope="row" padding="none">
                       {row.name}
