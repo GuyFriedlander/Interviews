@@ -4,7 +4,7 @@ import Table from './Table/Table'
 import { getRows } from '../db/rows'
 
 const App = () => {
-  const [rows] = useState(getRows())
+  const [rows, setRows] = useState(getRows())
   const [searchValue, setSearchValue] = useState<string>('')
   const [filteredRows, setFilteredRows] = useState(rows)
 
@@ -16,10 +16,16 @@ const App = () => {
     )
   }, [searchValue, rows])
 
+  const handleDelete = (toRemoveIds: readonly number[]) => {
+    setRows((prevRows) =>
+      prevRows.filter((row) => !toRemoveIds.includes(row.id))
+    )
+  }
+
   return (
     <div>
       <Header searchValue={searchValue} setSearchValue={setSearchValue} />
-      <Table rows={filteredRows} />
+      <Table rows={filteredRows} handleDelete={handleDelete} />
     </div>
   )
 }

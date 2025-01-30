@@ -37,7 +37,12 @@ function getComparator<Key extends keyof any>(
     : (a, b) => -descendingComparator(a, b, orderBy)
 }
 
-const Table = ({ rows }: { rows: Row[] }) => {
+interface TableProps {
+  rows: Row[]
+  handleDelete: (rowIds: readonly number[]) => void
+}
+
+const Table = ({ rows, handleDelete }: TableProps) => {
   const [orderBy, setOrderBy] = useState<keyof Row>('name')
   const [order, setOrder] = useState<Order>('asc')
   const [page, setPage] = useState(0)
@@ -98,10 +103,17 @@ const Table = ({ rows }: { rows: Row[] }) => {
     setSelected([])
   }
 
+  const handleDeleteClick = () => {
+    handleDelete(selected)
+  }
+
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <TableToolbar numSelected={0} />
+        <TableToolbar
+          numSelected={selected.length}
+          onDelete={handleDeleteClick}
+        />
 
         <TableContainer>
           <MuiTable>
