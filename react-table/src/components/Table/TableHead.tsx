@@ -31,7 +31,6 @@ const TableHead = ({
     (event) => {
       onRequestSort(event, property)
     }
-
   return (
     <MuiTableHead>
       <TableRow>

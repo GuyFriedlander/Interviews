@@ -1,4 +1,4 @@
-import { MouseEvent } from 'react'
+import { MouseEvent, useMemo, useState } from 'react'
 import Box from '@mui/material/Box'
 import MuiTable from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -11,9 +11,39 @@ import TableHead from './TableHead'
 import TableToolbar from './TableToolbar'
 import { Row } from '../../db/model'
 
+function descendingComparator<T>(a: T, b: T, orderBy: keyof T): number {
+  const valueA = a[orderBy]
+  const valueB = b[orderBy]
+
+  if (typeof valueA === 'string' && typeof valueB === 'string') {
+    return valueB.localeCompare(valueA)
+  }
+
+  return (valueB as number) - (valueA as number)
+}
+
+type Order = 'asc' | 'desc'
+
+function getComparator<Key extends keyof any>(
+  order: Order,
+  orderBy: Key
+): (
+  a: Record<Key, string | number>,
+  b: Record<Key, string | number>
+) => number {
+  return order === 'desc'
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy)
+}
+
 const Table = ({ rows }: { rows: Row[] }) => {
-  const handleRequestSort = (event: MouseEvent, property: string) => {
-    console.log('property?', property)
+  const [orderBy, setOrderBy] = useState<keyof Row>('name')
+  const [order, setOrder] = useState<Order>('asc')
+
+  const handleRequestSort = (event: React.MouseEvent, property: string) => {
+    const isAsc = orderBy === property && order === 'asc'
+    setOrder(isAsc ? 'desc' : 'asc')
+    setOrderBy(property as keyof Row)
   }
 
   const handleSelectAllClick = () => {}
@@ -25,6 +55,10 @@ const Table = ({ rows }: { rows: Row[] }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isSelected = (name: string) => false
 
+  const currentRows = useMemo(() => {
+    return [...rows].sort(getComparator(order, orderBy))
+  }, [order, orderBy, rows])
+
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
@@ -34,14 +68,14 @@ const Table = ({ rows }: { rows: Row[] }) => {
           <MuiTable>
             <TableHead
               numSelected={0}
-              // order={order}
-              // orderBy={orderBy}
+              order={order}
+              orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
             <TableBody>
-              {rows.map((row) => {
+              {currentRows.map((row) => {
                 const isItemSelected = isSelected(row.name)
 
                 return (
